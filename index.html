@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ParkFinder MA — Trouvez votre place en un clic</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --blue:#185FA5;--blue-dark:#0C447C;--blue-light:#E6F1FB;
+  --gold:#BA7517;--gold-light:#FAEEDA;
+  --white:#ffffff;--gray:#f4f6fa;--text:#1a2333;--muted:#6b7a94;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--text);min-height:100vh}
+
+/* NAV */
+nav{background:var(--white);padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 0 #e8ecf2}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-icon{width:36px;height:36px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.nav-logo-text{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--blue)}
+.nav-logo-text span{color:var(--gold)}
+
+/* HERO */
+.hero{max-width:1100px;margin:0 auto;padding:80px 40px 60px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--blue-light);color:var(--blue-dark);font-size:12px;font-weight:500;padding:6px 14px;border-radius:20px;margin-bottom:20px}
+.hero-badge span{width:6px;height:6px;background:var(--blue);border-radius:50%;display:inline-block}
+.hero h1{font-family:'Syne',sans-serif;font-size:44px;font-weight:800;line-height:1.15;margin-bottom:16px;color:var(--text)}
+.hero h1 em{color:var(--blue);font-style:normal}
+.hero p{font-size:16px;color:var(--muted);line-height:1.7;margin-bottom:32px}
+.hero-stats{display:flex;gap:24px;margin-bottom:32px}
+.stat{text-align:center}
+.stat-num{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:var(--blue)}
+.stat-label{font-size:11px;color:var(--muted);margin-top:2px}
+.hero-btn{display:inline-flex;align-items:center;gap:8px;background:var(--blue);color:white;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:500;font-size:15px;transition:.2s}
+.hero-btn:hover{background:var(--blue-dark);transform:translateY(-1px)}
+
+/* LOGIN CARD */
+.login-card{background:var(--white);border-radius:20px;padding:36px;box-shadow:0 4px 24px rgba(24,95,165,.1)}
+.login-card h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px}
+.login-card p{font-size:13px;color:var(--muted);margin-bottom:28px}
+.role-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px}
+.role-tab{padding:10px;border:1.5px solid #e2e8f0;border-radius:10px;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.role-tab.active{border-color:var(--blue);background:var(--blue-light);color:var(--blue)}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.form-group input{width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:.2s}
+.form-group input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.1)}
+.btn-login{width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:.2s;margin-top:8px}
+.btn-login:hover{background:var(--blue-dark)}
+.btn-login:active{transform:scale(.98)}
+.signup-link{text-align:center;font-size:13px;color:var(--muted);margin-top:16px}
+.signup-link a{color:var(--blue);font-weight:500;text-decoration:none}
+.error-msg{background:#fef2f2;color:#c53030;font-size:12px;padding:10px 14px;border-radius:8px;margin-bottom:12px;display:none}
+.loading{display:none;text-align:center;color:var(--muted);font-size:13px;margin-top:10px}
+
+/* FEATURES */
+.features{max-width:1100px;margin:0 auto;padding:0 40px 80px}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.feature-card{background:var(--white);border-radius:16px;padding:24px;border:1px solid #e8ecf2}
+.feature-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:20px}
+.feature-card h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:600;margin-bottom:8px}
+.feature-card p{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* FOOTER */
+footer{background:var(--blue-dark);color:white;text-align:center;padding:20px;font-size:13px;opacity:.9}
+
+@media(max-width:768px){
+  .hero{grid-template-columns:1fr;padding:40px 20px}
+  .features-grid{grid-template-columns:1fr}
+  .features{padding:0 20px 40px}
+  nav{padding:0 20px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <div class="nav-logo-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="white"/><circle cx="12" cy="9" r="3" fill="#BA7517"/></svg>
+    </div>
+    <span class="nav-logo-text">ParkFinder <span>MA</span></span>
+  </a>
+</nav>
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge"><span></span> Application mobile — Maroc</div>
+    <h1>Trouvez votre place de <em>parking</em> en un clic</h1>
+    <p>ParkFinder MA connecte les conducteurs aux agents de parking en temps réel. Fini le stress de chercher une place en ville.</p>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">2</div><div class="stat-label">Types d'utilisateurs</div></div>
+      <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Temps réel</div></div>
+      <div class="stat"><div class="stat-num">50 DH</div><div class="stat-label">Abonnement/mois</div></div>
+    </div>
+    <a href="#login" class="hero-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      Commencer maintenant
+    </a>
+  </div>
+
+  <div class="login-card" id="login">
+    <h2>Se connecter</h2>
+    <p>Choisissez votre profil pour continuer</p>
+    <div class="role-tabs">
+      <button class="role-tab active" onclick="selectRole('client')" id="tab-client">
+        🚗 Client
+      </button>
+      <button class="role-tab" onclick="selectRole('agent')" id="tab-agent">
+        🏢 Agent
+      </button>
+    </div>
+    <div class="error-msg" id="error-msg"></div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="votre@email.com"/>
+    </div>
+    <div class="form-group">
+      <label>Mot de passe</label>
+      <input type="password" id="password" placeholder="••••••••"/>
+    </div>
+    <button class="btn-login" onclick="handleLogin()">Connexion</button>
+    <div class="loading" id="loading">Connexion en cours...</div>
+    <p class="signup-link">Pas de compte ? <a href="#" onclick="handleSignup()">S'inscrire</a></p>
+  </div>
+</section>
+
+<section class="features">
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#E6F1FB">📍</div>
+      <h3>Géolocalisation en temps réel</h3>
+      <p>Visualisez les parkings disponibles autour de vous sur une carte interactive.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#E1F5EE">⚡</div>
+      <h3>Mise à jour instantanée</h3>
+      <p>Les agents mettent à jour les places libres en direct. Zéro délai, zéro surprise.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#FAEEDA">🔒</div>
+      <h3>Réservation Premium</h3>
+      <p>Avec l'abonnement à 50 DH/mois, réservez votre place avant d'arriver.</p>
+    </div>
+  </div>
+</section>
+
+<footer>© 2025 ParkFinder MA — Trouvez votre place en un clic</footer>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // ⚠️ REMPLACE PAR TA CONFIG FIREBASE
+  const firebaseConfig = {
+    apiKey: "VOTRE_API_KEY",
+    authDomain: "VOTRE_PROJECT.firebaseapp.com",
+    projectId: "VOTRE_PROJECT_ID",
+    storageBucket: "VOTRE_PROJECT.appspot.com",
+    messagingSenderId: "VOTRE_SENDER_ID",
+    appId: "VOTRE_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let selectedRole = 'client';
+
+  window.selectRole = (role) => {
+    selectedRole = role;
+    document.getElementById('tab-client').classList.toggle('active', role==='client');
+    document.getElementById('tab-agent').classList.toggle('active', role==='agent');
+  };
+
+  window.handleLogin = async () => {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const errEl = document.getElementById('error-msg');
+    const loadEl = document.getElementById('loading');
+    errEl.style.display='none';
+    if(!email||!password){errEl.textContent='Veuillez remplir tous les champs';errEl.style.display='block';return;}
+    loadEl.style.display='block';
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const userDoc = await getDoc(doc(db,'users',cred.user.uid));
+      if(userDoc.exists()){
+        const role = userDoc.data().role;
+        window.location.href = role==='agent' ? 'agent.html' : 'client.html';
+      } else {
+        window.location.href = selectedRole==='agent' ? 'agent.html' : 'client.html';
+      }
+    } catch(e) {
+      loadEl.style.display='none';
+      errEl.textContent = e.code==='auth/user-not-found'?'Compte introuvable':e.code==='auth/wrong-password'?'Mot de passe incorrect':'Erreur: '+e.message;
+      errEl.style.display='block';
+    }
+  };
+
+  window.handleSignup = async () => {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const errEl = document.getElementById('error-msg');
+    const loadEl = document.getElementById('loading');
+    errEl.style.display='none';
+    if(!email||!password){errEl.textContent='Veuillez remplir tous les champs';errEl.style.display='block';return;}
+    if(password.length<6){errEl.textContent='Mot de passe minimum 6 caractères';errEl.style.display='block';return;}
+    loadEl.style.display='block';
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await setDoc(doc(db,'users',cred.user.uid),{email,role:selectedRole,createdAt:new Date().toISOString(),premium:false});
+      window.location.href = selectedRole==='agent' ? 'agent.html' : 'client.html';
+    } catch(e) {
+      loadEl.style.display='none';
+      errEl.textContent = e.code==='auth/email-already-in-use'?'Email déjà utilisé':'Erreur: '+e.message;
+      errEl.style.display='block';
+    }
+  };
+
+  // Enter key
+  document.addEventListener('keydown', e => { if(e.key==='Enter') window.handleLogin(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ParkFinder MA — Mes Réservations</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--blue:#185FA5;--blue-dark:#0C447C;--blue-light:#E6F1FB;--gold:#BA7517;--gold-light:#FAEEDA;--green:#0F6E56;--green-light:#E1F5EE;--red:#c53030;--red-light:#fef2f2;--white:#fff;--gray:#f4f6fa;--text:#1a2333;--muted:#6b7a94}
+body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--text);min-height:100vh}
+
+nav{background:var(--blue);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:99}
+.nav-logo{display:flex;align-items:center;gap:8px;color:white;font-family:'Syne',sans-serif;font-size:17px;font-weight:700;text-decoration:none}
+.nav-logo span{color:#BA7517}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-badge{background:rgba(255,255,255,.2);color:white;font-size:12px;padding:4px 10px;border-radius:20px}
+.premium-badge{background:var(--gold);color:white;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px}
+.btn-back{background:rgba(255,255,255,.15);color:white;border:none;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn-logout{background:rgba(255,255,255,.15);color:white;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif}
+
+.container{max-width:700px;margin:0 auto;padding:36px 24px}
+.page-header{margin-bottom:28px}
+.page-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;margin-bottom:6px}
+.page-sub{color:var(--muted);font-size:14px}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+.stat-card{background:var(--white);border-radius:14px;padding:18px;border:1px solid #e8ecf2;text-align:center}
+.stat-num{font-family:'Syne',sans-serif;font-size:28px;font-weight:700}
+.stat-label{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* NOUVELLE RÉSERVATION */
+.new-res-card{background:var(--white);border-radius:16px;padding:24px;border:1px solid #e8ecf2;margin-bottom:24px}
+.card-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.form-group select, .form-group input{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:.2s;background:var(--white)}
+.form-group select:focus, .form-group input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.1)}
+.note-box{background:var(--blue-light);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--blue-dark);line-height:1.6;margin-bottom:16px}
+.btn-reserver{width:100%;padding:13px;background:var(--blue);color:white;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:.2s}
+.btn-reserver:hover{background:var(--blue-dark)}
+.btn-reserver:disabled{background:#ccc;cursor:not-allowed}
+.success-banner{background:var(--green-light);border:1px solid #9FE1CB;border-radius:10px;padding:14px 16px;color:var(--green);font-size:13px;margin-bottom:16px;display:none;line-height:1.6}
+
+/* LISTE RÉSERVATIONS */
+.reservations-card{background:var(--white);border-radius:16px;padding:24px;border:1px solid #e8ecf2}
+.res-list{display:flex;flex-direction:column;gap:12px;margin-top:4px}
+.res-item{background:var(--gray);border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.res-info h4{font-size:14px;font-weight:500;margin-bottom:3px}
+.res-info p{font-size:12px;color:var(--muted)}
+.res-time{text-align:right}
+.res-time .time{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--blue)}
+.res-time .date{font-size:11px;color:var(--muted);margin-top:2px}
+.status-badge{font-size:11px;font-weight:500;padding:3px 10px;border-radius:12px;margin-top:6px;display:inline-block}
+.status-confirmed{background:var(--green-light);color:var(--green)}
+.status-cancelled{background:var(--red-light);color:var(--red)}
+.btn-cancel-res{background:var(--red-light);color:var(--red);border:none;padding:5px 12px;border-radius:8px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px}
+.btn-cancel-res:hover{background:#fed7d7}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-state .icon{font-size:40px;margin-bottom:12px}
+.empty-state p{font-size:14px}
+
+/* NOT PREMIUM */
+.not-premium{background:linear-gradient(135deg,var(--blue-dark),var(--blue));border-radius:16px;padding:36px;text-align:center;color:white;margin-bottom:24px;display:none}
+.not-premium h3{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:10px}
+.not-premium p{font-size:14px;opacity:.85;margin-bottom:20px;line-height:1.6}
+.btn-subscribe{background:var(--gold);color:white;border:none;padding:13px 28px;border-radius:12px;font-family:'Syne',sans-serif;font-size:15px;font-weight:600;cursor:pointer}
+.btn-subscribe:hover{background:#9a6010}
+
+@media(max-width:600px){
+  .stats-row{grid-template-columns:1fr 1fr}
+  .res-item{flex-direction:column;align-items:flex-start}
+  .res-time{text-align:left}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="white"/><circle cx="12" cy="9" r="3" fill="#BA7517"/></svg>
+    ParkFinder <span>MA</span>
+  </a>
+  <div class="nav-right">
+    <span class="premium-badge">⭐ Premium</span>
+    <a href="client.html" class="btn-back">← Carte</a>
+    <button class="btn-logout" onclick="logout()">Déconnexion</button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <p class="page-title">Mes Réservations</p>
+    <p class="page-sub" id="client-email-sub">Gérez vos réservations de parking</p>
+  </div>
+
+  <!-- NOT PREMIUM -->
+  <div class="not-premium" id="not-premium-block">
+    <h3>🔒 Fonctionnalité Premium</h3>
+    <p>La réservation de places est disponible uniquement pour les abonnés Premium.<br>Pour seulement <strong>50 DH/mois</strong>, garantissez votre place à l'avance.</p>
+    <button class="btn-subscribe" onclick="activatePremium()">S'abonner maintenant — 50 DH/mois</button>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row" id="stats-row" style="display:none">
+    <div class="stat-card">
+      <div class="stat-num" id="stat-total" style="color:var(--blue)">0</div>
+      <div class="stat-label">Total réservations</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-confirmed" style="color:var(--green)">0</div>
+      <div class="stat-label">Confirmées</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-cancelled" style="color:var(--red)">0</div>
+      <div class="stat-label">Annulées</div>
+    </div>
+  </div>
+
+  <!-- NOUVELLE RÉSERVATION -->
+  <div class="new-res-card" id="new-res-card" style="display:none">
+    <p class="card-title">📍 Nouvelle réservation</p>
+    <div class="success-banner" id="success-banner"></div>
+    <div class="form-group">
+      <label>Choisir un parking</label>
+      <select id="select-parking">
+        <option value="">-- Sélectionner un parking --</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Heure d'arrivée prévue</label>
+      <input type="time" id="arrival-time"/>
+    </div>
+    <div class="note-box">
+      📌 Une place sera automatiquement attribuée à votre arrivée. Zéro stress, place garantie !
+    </div>
+    <button class="btn-reserver" id="btn-reserver" onclick="makeReservation()">Confirmer la réservation</button>
+  </div>
+
+  <!-- HISTORIQUE -->
+  <div class="reservations-card" id="reservations-card" style="display:none">
+    <p class="card-title">📋 Historique</p>
+    <div class="res-list" id="res-list">
+      <div class="empty-state">
+        <div class="icon">🅿️</div>
+        <p>Aucune réservation pour l'instant</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, getDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC3Qyp0HmSpINBHQoytD9rPhvuEn7RBNwY",
+    authDomain: "zr-business.firebaseapp.com",
+    projectId: "zr-business",
+    storageBucket: "zr-business.firebasestorage.app",
+    messagingSenderId: "744051534138",
+    appId: "1:744051534138:web:81d29df5a7aad994aa4803"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let currentUser = null;
+  let isPremium = false;
+  let parkings = [];
+
+  onAuthStateChanged(auth, async (user) => {
+    if(!user){ window.location.href='index.html'; return; }
+    currentUser = user;
+    document.getElementById('client-email-sub').textContent = user.email;
+
+    const userDoc = await getDoc(doc(db,'users',user.uid));
+    if(userDoc.exists()){ isPremium = userDoc.data().premium||false; }
+
+    if(!isPremium){
+      document.getElementById('not-premium-block').style.display='block';
+    } else {
+      document.getElementById('stats-row').style.display='grid';
+      document.getElementById('new-res-card').style.display='block';
+      document.getElementById('reservations-card').style.display='block';
+      await loadParkings();
+      await loadReservations();
+    }
+  });
+
+  async function loadParkings(){
+    const snap = await getDocs(collection(db,'parkings'));
+    parkings = [];
+    const sel = document.getElementById('select-parking');
+    sel.innerHTML = '<option value="">-- Sélectionner un parking --</option>';
+    snap.forEach(d => {
+      const p = {id:d.id,...d.data()};
+      parkings.push(p);
+      if(p.places>0){
+        sel.innerHTML += `<option value="${p.id}">${p.name} — ${p.address} (${p.places} libres)</option>`;
+      }
+    });
+  }
+
+  async function loadReservations(){
+    const q = query(collection(db,'reservations'), where('clientId','==',currentUser.uid));
+    const snap = await getDocs(q);
+    const list = document.getElementById('res-list');
+    let total=0, confirmed=0, cancelled=0;
+
+    if(snap.empty){
+      list.innerHTML='<div class="empty-state"><div class="icon">🅿️</div><p>Aucune réservation pour l\'instant</p></div>';
+      return;
+    }
+
+    let html = '';
+    snap.forEach(d => {
+      const r = d.data();
+      total++;
+      if(r.status==='confirmed') confirmed++;
+      else if(r.status==='cancelled') cancelled++;
+      const date = r.createdAt?.toDate ? r.createdAt.toDate().toLocaleDateString('fr-FR') : 'Aujourd\'hui';
+      const statusClass = r.status==='confirmed'?'status-confirmed':'status-cancelled';
+      const statusText = r.status==='confirmed'?'✅ Confirmée':'❌ Annulée';
+      html += `
+        <div class="res-item">
+          <div class="res-info">
+            <h4>${r.parkingName}</h4>
+            <p>📍 ${r.parkingAddress}</p>
+            <span class="status-badge ${statusClass}">${statusText}</span>
+            ${r.status==='confirmed'?`<br><button class="btn-cancel-res" onclick="cancelReservation('${d.id}','${r.parkingId}')">Annuler</button>`:''}
+          </div>
+          <div class="res-time">
+            <div class="time">🕐 ${r.arrivalTime}</div>
+            <div class="date">${date}</div>
+          </div>
+        </div>`;
+    });
+    list.innerHTML = html;
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-confirmed').textContent = confirmed;
+    document.getElementById('stat-cancelled').textContent = cancelled;
+  }
+
+  window.makeReservation = async () => {
+    const parkingId = document.getElementById('select-parking').value;
+    const arrivalTime = document.getElementById('arrival-time').value;
+    if(!parkingId){ alert('Veuillez choisir un parking'); return; }
+    if(!arrivalTime){ alert('Veuillez indiquer votre heure d\'arrivée'); return; }
+    const parking = parkings.find(p=>p.id===parkingId);
+    if(!parking){ return; }
+    const btn = document.getElementById('btn-reserver');
+    btn.disabled=true; btn.textContent='Réservation en cours...';
+    try {
+      await addDoc(collection(db,'reservations'),{
+        clientId:currentUser.uid, clientEmail:currentUser.email,
+        parkingId, parkingName:parking.name, parkingAddress:parking.address,
+        arrivalTime, status:'confirmed', createdAt:serverTimestamp()
+      });
+      await updateDoc(doc(db,'parkings',parkingId),{places:Math.max(0,parking.places-1)});
+      const banner = document.getElementById('success-banner');
+      banner.innerHTML = `✅ Réservation confirmée !<br>📍 <strong>${parking.name}</strong><br>🕐 Arrivée prévue : <strong>${arrivalTime}</strong><br>Une place vous est réservée. À tout à l'heure !`;
+      banner.style.display='block';
+      document.getElementById('select-parking').value='';
+      await loadParkings();
+      await loadReservations();
+    } catch(e){ alert('Erreur: '+e.message); }
+    btn.disabled=false; btn.textContent='Confirmer la réservation';
+  };
+
+  window.cancelReservation = async (resId, parkingId) => {
+    if(!confirm('Voulez-vous annuler cette réservation ?')) return;
+    try {
+      await updateDoc(doc(db,'reservations',resId),{status:'cancelled'});
+      const parking = parkings.find(p=>p.id===parkingId);
+      if(parking){ await updateDoc(doc(db,'parkings',parkingId),{places:parking.places+1}); }
+      await loadParkings();
+      await loadReservations();
+    } catch(e){ alert('Erreur: '+e.message); }
+  };
+
+  window.activatePremium = async () => {
+    await updateDoc(doc(db,'users',currentUser.uid),{premium:true});
+    isPremium=true;
+    document.getElementById('not-premium-block').style.display='none';
+    document.getElementById('stats-row').style.display='grid';
+    document.getElementById('new-res-card').style.display='block';
+    document.getElementById('reservations-card').style.display='block';
+    await loadParkings();
+    await loadReservations();
+  };
+
+  window.logout = async () => { await signOut(auth); window.location.href='index.html'; };
+
+  // Set default time
+  const now = new Date();
+  document.getElementById('arrival-time').value = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+</script>
+</body>
+</html>
