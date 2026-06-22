@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ParkFinder MA — Trouver un parking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  body { background-color: #000000; color: #ffffff; height: 100vh; overflow: hidden; }
+  .liquid-glass {
+    background: rgba(0, 0, 0, 0.4); background-blend-mode: luminosity;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    border: none; box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    position: relative; overflow: hidden;
+  }
+  .liquid-glass::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.4px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%, rgba(255,255,255,0.1) 80%, rgba(255,255,255,0.3) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+  }
+  .input-glass { background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.15); color: #fff; transition: .2s; }
+  .input-glass::placeholder { color: rgba(255,255,255,0.4); }
+  .input-glass:focus { outline: none; border-color: rgba(255,255,255,0.5); }
+  .btn-primary { background: #fff; color: #000; transition: .2s; }
+  .btn-primary:hover { background: rgba(255,255,255,0.85); }
+  .filter-btn { transition: .2s; color: rgba(255,255,255,0.55); }
+  .filter-btn.active { background: rgba(255,255,255,0.12); color: #fff; }
+  .badge-green { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .badge-red { background: rgba(239,68,68,0.15); color: #f87171; }
+  .badge-yellow { background: rgba(234,179,8,0.15); color: #facc15; }
+  .parking-card { transition: .2s; cursor: pointer; }
+  .parking-card:hover { background: rgba(255,255,255,0.06); }
+  #map { height: 100%; width: 100%; filter: grayscale(0.3) brightness(0.85); }
+  .leaflet-popup-content-wrapper { background: rgba(0,0,0,0.85); color: #fff; border-radius: 12px; backdrop-filter: blur(8px); }
+  .leaflet-popup-tip { background: rgba(0,0,0,0.85); }
+  .map-pin { display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#000;background:#fff;border-radius:20px;padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.4); }
+  .sidebar-scroll::-webkit-scrollbar { width: 5px; }
+  .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+</style>
+</head>
+<body>
+
+<nav class="liquid-glass fixed top-3 left-1/2 -translate-x-1/2 z-[1000] w-[96%] max-w-6xl rounded-2xl px-5 py-2.5 flex items-center justify-between">
+  <a href="index.html" class="flex items-center gap-2.5">
+    <div class="w-8 h-8 rounded-lg flex items-center justify-center liquid-glass">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="white"/><circle cx="12" cy="9" r="3" fill="#000"/></svg>
+    </div>
+    <span class="text-sm font-semibold tracking-tight">ParkFinder <span class="font-light opacity-70">MA</span></span>
+  </a>
+  <div class="flex items-center gap-2.5">
+    <span id="premium-nav" class="liquid-glass text-[11px] font-medium px-3 py-1 rounded-full hidden">⭐ Premium</span>
+    <a href="reservation.html" class="liquid-glass text-[11px] px-3 py-1.5 rounded-full hover:bg-white/10 transition">Mes réservations</a>
+    <span class="liquid-glass text-[11px] font-light px-3 py-1 rounded-full" id="client-email">Client</span>
+    <button class="liquid-glass text-[11px] px-3 py-1.5 rounded-full hover:bg-white/10 transition" onclick="logout()">Déconnexion</button>
+  </div>
+</nav>
+
+<div class="grid h-screen" style="grid-template-columns:360px 1fr">
+  <div class="liquid-glass flex flex-col pt-20" style="border-radius:0">
+    <div class="px-5 pb-3">
+      <p class="text-lg font-semibold">Parkings disponibles</p>
+      <p class="text-xs font-light text-white/50 mb-4">Mis à jour en temps réel</p>
+      <div class="flex items-center gap-2 input-glass rounded-xl px-3.5 py-2.5 mb-3">
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ParkFinder MA — Trouver un parking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  body { background-color: #000000; color: #ffffff; height: 100vh; overflow: hidden; }
+  .liquid-glass {
+    background: rgba(0, 0, 0, 0.4); background-blend-mode: luminosity;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    border: none; box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    position: relative; overflow: hidden;
+  }
+  .liquid-glass::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.4px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%, rgba(255,255,255,0.1) 80%, rgba(255,255,255,0.3) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+  }
+  .input-glass { background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.15); color: #fff; transition: .2s; }
+  .input-glass::placeholder { color: rgba(255,255,255,0.4); }
+  .input-glass:focus { outline: none; border-color: rgba(255,255,255,0.5); }
+  .btn-primary { background: #fff; color: #000; transition: .2s; }
+  .btn-primary:hover { background: rgba(255,255,255,0.85); }
+  .filter-btn { transition: .2s; color: rgba(255,255,255,0.55); }
+  .filter-btn.active { background: rgba(255,255,255,0.12); color: #fff; }
+  .badge-green { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .badge-red { background: rgba(239,68,68,0.15); color: #f87171; }
+  .badge-yellow { background: rgba(234,179,8,0.15); color: #facc15; }
+  .parking-card { transition: .2s; cursor: pointer; }
+  .parking-card:hover { background: rgba(255,255,255,0.06); }
+  #map { height: 100%; width: 100%; filter: grayscale(0.3) brightness(0.85); }
+  .leaflet-popup-content-wrapper { background: rgba(0,0,0,0.85); color: #fff; border-radius: 12px; backdrop-filter: blur(8px); }
+  .leaflet-popup-tip { background: rgba(0,0,0,0.85); }
+  .map-pin { display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#000;background:#fff;border-radius:20px;padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.4); }
+  .sidebar-scroll::-webkit-scrollbar { width: 5px; }
+  .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+</style>
+</head>
+<body>
+
+<nav class="liquid-glass fixed top-3 left-1/2 -translate-x-1/2 z-[1000] w-[96%] max-w-6xl rounded-2xl px-5 py-2.5 flex items-center justify-between">
+  <a href="index.html" class="flex items-center gap-2.5">
+    <div class="w-8 h-8 rounded-lg flex items-center justify-center liquid-glass">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="white"/><circle cx="12" cy="9" r="3" fill="#000"/></svg>
+    </div>
+    <span class="text-sm font-semibold tracking-tight">ParkFinder <span class="font-light opacity-70">MA</span></span>
+  </a>
+  <div class="flex items-center gap-2.5">
+    <span id="premium-nav" class="liquid-glass text-[11px] font-medium px-3 py-1 rounded-full hidden">⭐ Premium</span>
+    <a href="reservation.html" class="liquid-glass text-[11px] px-3 py-1.5 rounded-full hover:bg-white/10 transition">Mes réservations</a>
+    <span class="liquid-glass text-[11px] font-light px-3 py-1 rounded-full" id="client-email">Client</span>
+    <button class="liquid-glass text-[11px] px-3 py-1.5 rounded-full hover:bg-white/10 transition" onclick="logout()">Déconnexion</button>
+  </div>
+</nav>
+
+<div class="grid h-screen" style="grid-template-columns:360px 1fr">
+  <div class="liquid-glass flex flex-col pt-20" style="border-radius:0">
+    <div class="px-5 pb-3">
+      <p class="text-lg font-semibold">Parkings disponibles</p>
+      <p class="text-xs font-light text-white/50 mb-4">Mis à jour en temps réel</p>
+      <div class="flex items-center gap-2 input-glass rounded-xl px-3.5 py-2.5 mb-3">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="rgba(255,255,255,0.5)" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/></svg>
+        <input type="text" id="search-input" placeholder="Chercher un parking..." class="bg-transparent text-sm outline-none flex-1 text-white placeholder-white/40" oninput="filterParkings()"/>
+      </div>
+      <div class="flex gap-2">
+        <button class="filter-btn active liquid-glass text-xs px-3.5 py-1.5 rounded-full" onclick="setFilter('all',this)">Tous</button>
+        <button class="filter-btn liquid-glass text-xs px-3.5 py-1.5 rounded-full" onclick="setFilter('libre',this)">Libres</button>
+        <button class="filter-btn liquid-glass text-xs px-3.5 py-1.5 rounded-full" onclick="setFilter('complet',this)">Complets</button>
+      </div>
+    </div>
+
+    <div id="premium-banner" class="px-5 mb-3">
+      <div class="liquid-glass rounded-xl p-4">
+        <h4 class="text-sm font-semibold mb-1">🔒 Passez Premium</h4>
+        <p class="text-[11px] font-light text-white/55 mb-3">Réservez votre place à l'avance pour seulement 50 DH/mois</p>
+        <button class="btn-primary text-xs font-medium px-4 py-2 rounded-lg" onclick="activatePremium()">S'abonner</button>
+      </div>
+    </div>
+
+    <div class="sidebar-scroll flex-1 overflow-y-auto px-5 pb-5 flex flex-col gap-2.5" id="parkings-list">
+      <p class="text-sm font-light text-white/50">Chargement des parkings...</p>
+    </div>
+  </div>
+
+  <div id="map"></div>
+</div>
+
+<div class="fixed inset-0 z-[2000] hidden items-center justify-center px-4" id="modal-overlay" style="background:rgba(0,0,0,0.6)">
+  <div class="liquid-glass rounded-3xl p-8 w-[400px] max-w-full">
+    <h3 class="text-xl font-semibold mb-1.5">Réserver une place</h3>
+    <p class="text-sm font-light text-white/55 mb-5">Confirmez votre réservation pour ce parking</p>
+    <div class="liquid-glass rounded-xl p-4 mb-4">
+      <p class="text-sm font-medium mb-1" id="modal-park-name">—</p>
+      <p class="text-xs font-light text-white/55" id="modal-park-addr">—</p>
+      <p class="text-xs font-light text-white/55 mt-0.5" id="modal-park-places">—</p>
+    </div>
+    <label class="block text-[11px] font-medium text-white/50 uppercase tracking-wider mb-2">Heure d'arrivée prévue</label>
+    <input type="time" class="input-glass w-full rounded-xl px-3.5 py-3 text-sm mb-4" id="arrival-time"/>
+    <div class="liquid-glass rounded-lg p-3 text-xs font-light text-white/65 mb-5 leading-relaxed">
+      Une place sera automatiquement attribuée à votre arrivée. Vous recevrez une confirmation immédiatement.
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <button class="liquid-glass py-3 rounded-xl text-sm font-light hover:bg-white/10 transition" onclick="closeModal()">Annuler</button>
+      <button class="btn-primary py-3 rounded-xl text-sm font-semibold" onclick="confirmReservation()">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC3Qyp0HmSpINBHQoytD9rPhvuEn7RBNwY",
+    authDomain: "zr-business.firebaseapp.com",
+    projectId: "zr-business",
+    storageBucket: "zr-business.firebasestorage.app",
+    messagingSenderId: "744051534138",
+    appId: "1:744051534138:web:81d29df5a7aad994aa4803"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let currentUser = null;
+  let isPremium = false;
+  let allParkings = [];
+  let currentFilter = 'all';
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="rgba(255,255,255,0.5)" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/></svg>
+        <input type="text" id="search-input" placeholder="Chercher un parking..." class="bg-transparent text-sm outline-none flex-1 text-white placeholder-white/40" oninput="filterParkings()"/>
+      </div>
+      <div class="flex gap-2">
+        <button class="filter-btn active liquid-glass text-xs px-3.5 py-1.5 rounded-full" onclick="setFilter('all',this)">Tous</button>
+        <button class="filter-btn liquid-glass text-xs px-3.5 py-1.5 rounded-full" onclick="setFilter('libre',this)">Libres</button>
+        <button class="filter-btn liquid-glass text-xs px-3.5 py-1.5 rounded-full" onclick="setFilter('complet',this)">Complets</button>
+      </div>
+    </div>
+
+    <div id="premium-banner" class="px-5 mb-3">
+      <div class="liquid-glass rounded-xl p-4">
+        <h4 class="text-sm font-semibold mb-1">🔒 Passez Premium</h4>
+        <p class="text-[11px] font-light text-white/55 mb-3">Réservez votre place à l'avance pour seulement 50 DH/mois</p>
+        <button class="btn-primary text-xs font-medium px-4 py-2 rounded-lg" onclick="activatePremium()">S'abonner</button>
+      </div>
+    </div>
+
+    <div class="sidebar-scroll flex-1 overflow-y-auto px-5 pb-5 flex flex-col gap-2.5" id="parkings-list">
+      <p class="text-sm font-light text-white/50">Chargement des parkings...</p>
+    </div>
+  </div>
+
+  <div id="map"></div>
+</div>
+
+<div class="fixed inset-0 z-[2000] hidden items-center justify-center px-4" id="modal-overlay" style="background:rgba(0,0,0,0.6)">
+  <div class="liquid-glass rounded-3xl p-8 w-[400px] max-w-full">
+    <h3 class="text-xl font-semibold mb-1.5">Réserver une place</h3>
+    <p class="text-sm font-light text-white/55 mb-5">Confirmez votre réservation pour ce parking</p>
+    <div class="liquid-glass rounded-xl p-4 mb-4">
+      <p class="text-sm font-medium mb-1" id="modal-park-name">—</p>
+      <p class="text-xs font-light text-white/55" id="modal-park-addr">—</p>
+      <p class="text-xs font-light text-white/55 mt-0.5" id="modal-park-places">—</p>
+    </div>
+    <label class="block text-[11px] font-medium text-white/50 uppercase tracking-wider mb-2">Heure d'arrivée prévue</label>
+    <input type="time" class="input-glass w-full rounded-xl px-3.5 py-3 text-sm mb-4" id="arrival-time"/>
+    <div class="liquid-glass rounded-lg p-3 text-xs font-light text-white/65 mb-5 leading-relaxed">
+      Une place sera automatiquement attribuée à votre arrivée. Vous recevrez une confirmation immédiatement.
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <button class="liquid-glass py-3 rounded-xl text-sm font-light hover:bg-white/10 transition" onclick="closeModal()">Annuler</button>
+      <button class="btn-primary py-3 rounded-xl text-sm font-semibold" onclick="confirmReservation()">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC3Qyp0HmSpINBHQoytD9rPhvuEn7RBNwY",
+    authDomain: "zr-business.firebaseapp.com",
+    projectId: "zr-business",
+    storageBucket: "zr-business.firebasestorage.app",
+    messagingSenderId: "744051534138",
+    appId: "1:744051534138:web:81d29df5a7aad994aa4803"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let currentUser = null;
+  let isPremium = false;
+  let allParkings = [];
+  let currentFilter = 'all';
+  let selectedParking = null;
+  let markers = {};
+
+  const leafMap = L.map('map',{zoomControl:false}).setView([34.04, -6.82], 13);
+  L.control.zoom({position:'bottomright'}).addTo(leafMap);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap, © CARTO'}).addTo(leafMap);
+
+  function addMarker(p, id){
+    const icon = L.divIcon({ html:`<div class="map-pin">P ${p.places}</div>`, className:'', iconAnchor:[20,12] });
+    const lat = (p.lat||34.04) + (Math.random()-.5)*.02;
+    const lng = (p.lng||-6.82) + (Math.random()-.5)*.02;
+    const m = L.marker([lat,lng],{icon}).addTo(leafMap);
+    m.bindPopup(`<b>${p.name}</b><br>${p.address}<br><span>${p.places===0?'Complet':p.places+' places libres'}</span>`);
+    markers[id]=m;
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if(!user){ window.location.href='index.html'; return; }
+    currentUser = user;
+    document.getElementById('client-email').textContent = user.email;
+    const userDoc = await getDoc(doc(db,'users',user.uid));
+    if(userDoc.exists()){ isPremium = userDoc.data().premium||false; }
+    if(!isPremium){ document.getElementById('premium-banner').style.display='block'; }
+    else { document.getElementById('premium-banner').style.display='none'; document.getElementById('premium-nav').classList.remove('hidden'); }
+    listenParkings();
+  });
+
+  function listenParkings(){
+    onSnapshot(collection(db,'parkings'), (snap) => {
+      allParkings = [];
+      Object.values(markers).forEach(m=>leafMap.removeLayer(m));
+      markers={};
+      snap.forEach(d => {
+        allParkings.push({id:d.id,...d.data()});
+        addMarker(d.data(),d.id);
+      });
+      renderList();
+    });
+  }
+
+  function renderList(){
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const list = document.getElementById('parkings-list');
+    let filtered = allParkings.filter(p=>{
+      const matchSearch = p.name.toLowerCase().includes(search)||p.address.toLowerCase().includes(search);
+      const matchFilter = currentFilter==='all'||(currentFilter==='libre'&&p.places>0)||(currentFilter==='complet'&&p.places===0);
+      return matchSearch&&matchFilter;
+    });
+    if(filtered.length===0){ list.innerHTML='<p class="text-sm font-light text-white/50">Aucun parking trouvé.</p>'; return; }
+    list.innerHTML = filtered.map(p=>{
+      const badgeClass = p.places===0?'badge-red':p.places<=3?'badge-yellow':'badge-green';
+      const badgeText = p.places===0?'Complet':`${p.places} libres`;
+      return `<div class="parking-card liquid-glass rounded-xl p-3.5" onclick="selectParking('${p.id}')">
+        <div class="flex justify-between items-start mb-1.5">
+          <span class="text-sm font-medium">${p.name}</span>
+          <span class="text-[11px] font-medium px-2.5 py-1 rounded-full ${badgeClass}">${badgeText}</span>
+        </div>
+        <p class="text-xs font-light text-white/50 mb-2">📍 ${p.address}</p>
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-light text-white/50">${p.places} place(s) disponible(s)</span>
+          ${isPremium&&p.places>0?`<button class="btn-primary text-xs font-medium px-3.5 py-1.5 rounded-lg" onclick="openModal(event,'${p.id}')">Réserver</button>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  window.filterParkings = renderList;
+  window.setFilter = (f,btn) => {
+    currentFilter=f;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  let selectedParking = null;
+  let markers = {};
+
+  const leafMap = L.map('map',{zoomControl:false}).setView([34.04, -6.82], 13);
+  L.control.zoom({position:'bottomright'}).addTo(leafMap);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap, © CARTO'}).addTo(leafMap);
+
+  function addMarker(p, id){
+    const icon = L.divIcon({ html:`<div class="map-pin">P ${p.places}</div>`, className:'', iconAnchor:[20,12] });
+    const lat = (p.lat||34.04) + (Math.random()-.5)*.02;
+    const lng = (p.lng||-6.82) + (Math.random()-.5)*.02;
+    const m = L.marker([lat,lng],{icon}).addTo(leafMap);
+    m.bindPopup(`<b>${p.name}</b><br>${p.address}<br><span>${p.places===0?'Complet':p.places+' places libres'}</span>`);
+    markers[id]=m;
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if(!user){ window.location.href='index.html'; return; }
+    currentUser = user;
+    document.getElementById('client-email').textContent = user.email;
+    const userDoc = await getDoc(doc(db,'users',user.uid));
+    if(userDoc.exists()){ isPremium = userDoc.data().premium||false; }
+    if(!isPremium){ document.getElementById('premium-banner').style.display='block'; }
+    else { document.getElementById('premium-banner').style.display='none'; document.getElementById('premium-nav').classList.remove('hidden'); }
+    listenParkings();
+  });
+
+  function listenParkings(){
+    onSnapshot(collection(db,'parkings'), (snap) => {
+      allParkings = [];
+      Object.values(markers).forEach(m=>leafMap.removeLayer(m));
+      markers={};
+      snap.forEach(d => {
+        allParkings.push({id:d.id,...d.data()});
+        addMarker(d.data(),d.id);
+      });
+      renderList();
+    });
+  }
+
+  function renderList(){
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const list = document.getElementById('parkings-list');
+    let filtered = allParkings.filter(p=>{
+      const matchSearch = p.name.toLowerCase().includes(search)||p.address.toLowerCase().includes(search);
+      const matchFilter = currentFilter==='all'||(currentFilter==='libre'&&p.places>0)||(currentFilter==='complet'&&p.places===0);
+      return matchSearch&&matchFilter;
+    });
+    if(filtered.length===0){ list.innerHTML='<p class="text-sm font-light text-white/50">Aucun parking trouvé.</p>'; return; }
+    list.innerHTML = filtered.map(p=>{
+      const badgeClass = p.places===0?'badge-red':p.places<=3?'badge-yellow':'badge-green';
+      const badgeText = p.places===0?'Complet':`${p.places} libres`;
+      return `<div class="parking-card liquid-glass rounded-xl p-3.5" onclick="selectParking('${p.id}')">
+        <div class="flex justify-between items-start mb-1.5">
+          <span class="text-sm font-medium">${p.name}</span>
+          <span class="text-[11px] font-medium px-2.5 py-1 rounded-full ${badgeClass}">${badgeText}</span>
+        </div>
+        <p class="text-xs font-light text-white/50 mb-2">📍 ${p.address}</p>
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-light text-white/50">${p.places} place(s) disponible(s)</span>
+          ${isPremium&&p.places>0?`<button class="btn-primary text-xs font-medium px-3.5 py-1.5 rounded-lg" onclick="openModal(event,'${p.id}')">Réserver</button>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  window.filterParkings = renderList;
+  window.setFilter = (f,btn) => {
+    currentFilter=f;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderList();
+  };
+
+  window.selectParking = (id) => {
+    const p = allParkings.find(x=>x.id===id);
+    if(p&&markers[id]){ leafMap.setView(markers[id].getLatLng(),15); markers[id].openPopup(); }
+  };
+
+  window.openModal = (e, id) => {
+    e.stopPropagation();
+    selectedParking = allParkings.find(x=>x.id===id);
+    if(!selectedParking) return;
+    document.getElementById('modal-park-name').textContent = selectedParking.name;
+    document.getElementById('modal-park-addr').textContent = selectedParking.address;
+    document.getElementById('modal-park-places').textContent = `${selectedParking.places} place(s) disponible(s)`;
+    const now = new Date(); const h=now.getHours().toString().padStart(2,'0'); const m=now.getMinutes().toString().padStart(2,'0');
+    document.getElementById('arrival-time').value = `${h}:${m}`;
+    document.getElementById('modal-overlay').style.display='flex';
+  };
+
+  window.closeModal = () => { document.getElementById('modal-overlay').style.display='none'; selectedParking=null; };
+
+  window.confirmReservation = async () => {
+    if(!selectedParking) return;
+    const arrivalTime = document.getElementById('arrival-time').value;
+    if(!arrivalTime){ alert('Veuillez indiquer votre heure d\'arrivée'); return; }
+    try {
+      await addDoc(collection(db,'reservations'),{
+        clientId:currentUser.uid, clientEmail:currentUser.email,
+        parkingId:selectedParking.id, parkingName:selectedParking.name,
+        parkingAddress:selectedParking.address, arrivalTime,
+        status:'confirmed', createdAt:serverTimestamp()
+      });
+      await updateDoc(doc(db,'parkings',selectedParking.id),{places:Math.max(0,selectedParking.places-1)});
+      closeModal();
+      alert(`✅ Réservation confirmée !\n📍 ${selectedParking.name}\n🕐 Arrivée prévue: ${arrivalTime}\nUne place vous est attribuée.`);
+    } catch(e){ alert('Erreur: '+e.message); }
+  };
+
+  window.activatePremium = async () => {
+    if(!currentUser) return;
+    await updateDoc(doc(db,'users',currentUser.uid),{premium:true});
+    isPremium=true;
+    document.getElementById('premium-banner').style.display='none';
+    document.getElementById('premium-nav').classList.remove('hidden');
+    renderList();
+    alert('⭐ Félicitations ! Vous êtes maintenant Premium.\nVous pouvez réserver des places à l\'avance.');
+  };
+
+  window.logout = async () => { await signOut(auth); window.location.href='index.html'; };
+</script>
+</body>
+</html>
