@@ -13,17 +13,17 @@
   html, body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   body { background-color: #000000; color: #ffffff; min-height: 100vh; overflow-x: hidden; }
 
-  /* Full-screen background video */
   .bg-video {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: -1;
+    position: fixed; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; z-index: -2;
+  }
+  /* subtle dark overlay so text stays readable without changing the glass look */
+  .bg-overlay {
+    position: fixed; inset: 0; z-index: -1;
+    background: linear-gradient(135deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.2) 100%);
   }
 
-  /* Liquid Glass effect */
+  /* ORIGINAL Liquid Glass */
   .liquid-glass {
     background: rgba(0, 0, 0, 0.4);
     background-blend-mode: luminosity;
@@ -36,26 +36,18 @@
   }
   .liquid-glass::before {
     content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1.4px;
+    position: absolute; inset: 0; border-radius: inherit; padding: 1.4px;
     background: linear-gradient(180deg,
       rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 20%,
       rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%,
       rgba(255,255,255,0.1) 80%, rgba(255,255,255,0.3) 100%);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
   }
 
   .input-glass {
-    background: rgba(0,0,0,0.4);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: #fff;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.15); color: #fff;
     transition: border-color .2s, box-shadow .2s;
   }
   .input-glass::placeholder { color: rgba(255,255,255,0.4); }
@@ -80,6 +72,7 @@
 <video class="bg-video" autoplay loop muted playsinline>
   <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4" type="video/mp4"/>
 </video>
+<div class="bg-overlay"></div>
 
 <!-- NAVBAR -->
 <nav class="liquid-glass fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-5xl rounded-2xl px-6 py-3 flex items-center justify-between">
@@ -121,15 +114,24 @@
       </a>
     </div>
 
-    <!-- LOGIN CARD -->
+    <!-- LOGIN / SIGNUP CARD -->
     <div class="liquid-glass rounded-3xl p-9 fade-up" id="login">
-      <h2 class="text-2xl font-semibold mb-1.5">Se connecter</h2>
-      <p class="text-sm font-light text-white/55 mb-7">Choisissez votre profil pour continuer</p>
+      <h2 class="text-2xl font-semibold mb-1.5" id="form-title">Se connecter</h2>
+      <p class="text-sm font-light text-white/55 mb-7" id="form-subtitle">Choisissez votre profil pour continuer</p>
+
       <div class="grid grid-cols-2 gap-2 mb-6 p-1 liquid-glass rounded-2xl">
         <button class="role-tab active rounded-xl py-2.5 text-sm font-medium" onclick="selectRole('client')" id="tab-client">🚗 Client</button>
         <button class="role-tab rounded-xl py-2.5 text-sm font-medium" onclick="selectRole('agent')" id="tab-agent">🏢 Agent</button>
       </div>
+
+      <!-- Name field (signup only) -->
+      <div class="mb-4" id="name-field" style="display:none">
+        <label class="block text-[11px] font-medium text-white/50 uppercase tracking-wider mb-2">Nom complet</label>
+        <input type="text" id="name" placeholder="Votre nom" class="input-glass w-full rounded-xl px-3.5 py-3 text-sm"/>
+      </div>
+
       <div class="error-msg bg-red-500/15 border border-red-400/30 text-red-200 text-xs px-3.5 py-2.5 rounded-lg mb-3" id="error-msg"></div>
+
       <div class="mb-4">
         <label class="block text-[11px] font-medium text-white/50 uppercase tracking-wider mb-2">Email</label>
         <input type="email" id="email" placeholder="votre@email.com" class="input-glass w-full rounded-xl px-3.5 py-3 text-sm"/>
@@ -138,79 +140,13 @@
         <label class="block text-[11px] font-medium text-white/50 uppercase tracking-wider mb-2">Mot de passe</label>
         <input type="password" id="password" placeholder="••••••••" class="input-glass w-full rounded-xl px-3.5 py-3 text-sm"/>
       </div>
-  .error-msg { display: none; }
-  .loading { display: none; }
 
-  .fade-up { animation: fadeUp .8s ease both; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-</style>
-</head>
-<body>
+      <button class="btn-primary w-full py-3.5 rounded-xl font-semibold text-sm" id="btn-main" onclick="handleAction()">Connexion</button>
+      <div class="loading text-center text-white/55 text-xs mt-3" id="loading">Chargement...</div>
 
-<video class="bg-video" autoplay loop muted playsinline>
-  <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4" type="video/mp4"/>
-</video>
-
-<!-- NAVBAR -->
-<nav class="liquid-glass fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-5xl rounded-2xl px-6 py-3 flex items-center justify-between">
-  <a href="index.html" class="flex items-center gap-2.5">
-    <div class="w-9 h-9 rounded-xl flex items-center justify-center liquid-glass">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="white"/><circle cx="12" cy="9" r="3" fill="#000"/></svg>
-    </div>
-    <span class="text-base font-semibold tracking-tight">ParkFinder <span class="font-light opacity-70">MA</span></span>
-  </a>
-  <div class="hidden md:flex items-center gap-8 text-sm font-light text-white/70">
-    <a href="#features" class="hover:text-white transition">Fonctionnalités</a>
-    <a href="#login" class="hover:text-white transition">Connexion</a>
-  </div>
-  <a href="#login" class="btn-primary text-sm font-medium px-5 py-2 rounded-xl">Commencer</a>
-</nav>
-
-<!-- HERO -->
-<section class="min-h-screen flex items-center px-6 pt-32 pb-20">
-  <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center w-full">
-    <div class="fade-up">
-      <div class="liquid-glass inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-light mb-8">
-        <span class="w-1.5 h-1.5 rounded-full bg-white inline-block"></span>
-        Application mobile — Maroc
-      </div>
-      <h1 class="text-5xl md:text-6xl font-semibold leading-[1.05] tracking-tight mb-6">
-        Trouvez votre place de <span class="font-light italic">parking</span> en un clic
-      </h1>
-      <p class="text-base md:text-lg font-light text-white/70 leading-relaxed mb-10 max-w-md">
-        ParkFinder MA connecte les conducteurs aux agents de parking en temps réel. Fini le stress de chercher une place en ville.
+      <p class="text-center text-xs font-light text-white/55 mt-5" id="toggle-text">
+        Pas de compte ? <a href="#" onclick="showSignup();return false;" class="text-white font-medium">S'inscrire</a>
       </p>
-      <div class="flex gap-10 mb-10">
-        <div><div class="text-3xl font-semibold">2</div><div class="text-xs font-light text-white/50 mt-1">Types d'utilisateurs</div></div>
-        <div><div class="text-3xl font-semibold">100%</div><div class="text-xs font-light text-white/50 mt-1">Temps réel</div></div>
-        <div><div class="text-3xl font-semibold">50 DH</div><div class="text-xs font-light text-white/50 mt-1">Abonnement/mois</div></div>
-      </div>
-      <a href="#login" class="btn-primary inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-medium text-sm">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#000" stroke-width="2" stroke-linecap="round"/></svg>
-        Commencer maintenant
-      </a>
-    </div>
-
-    <!-- LOGIN CARD -->
-    <div class="liquid-glass rounded-3xl p-9 fade-up" id="login">
-      <h2 class="text-2xl font-semibold mb-1.5">Se connecter</h2>
-      <p class="text-sm font-light text-white/55 mb-7">Choisissez votre profil pour continuer</p>
-      <div class="grid grid-cols-2 gap-2 mb-6 p-1 liquid-glass rounded-2xl">
-        <button class="role-tab active rounded-xl py-2.5 text-sm font-medium" onclick="selectRole('client')" id="tab-client">🚗 Client</button>
-        <button class="role-tab rounded-xl py-2.5 text-sm font-medium" onclick="selectRole('agent')" id="tab-agent">🏢 Agent</button>
-      </div>
-      <div class="error-msg bg-red-500/15 border border-red-400/30 text-red-200 text-xs px-3.5 py-2.5 rounded-lg mb-3" id="error-msg"></div>
-      <div class="mb-4">
-        <label class="block text-[11px] font-medium text-white/50 uppercase tracking-wider mb-2">Email</label>
-        <input type="email" id="email" placeholder="votre@email.com" class="input-glass w-full rounded-xl px-3.5 py-3 text-sm"/>
-      </div>
-      <div class="mb-5">
-        <label class="block text-[11px] font-medium text-white/50 uppercase tracking-wider mb-2">Mot de passe</label>
-        <input type="password" id="password" placeholder="••••••••" class="input-glass w-full rounded-xl px-3.5 py-3 text-sm"/>
-      </div>
-      <button class="btn-primary w-full py-3.5 rounded-xl font-semibold text-sm" onclick="handleLogin()">Connexion</button>
-      <div class="loading text-center text-white/55 text-xs mt-3" id="loading">Connexion en cours...</div>
-      <p class="text-center text-xs font-light text-white/55 mt-5">Pas de compte ? <a href="#" onclick="handleSignup();return false;" class="text-white font-medium">S'inscrire</a></p>
     </div>
   </div>
 </section>
@@ -258,129 +194,99 @@
   const db = getFirestore(app);
 
   let selectedRole = 'client';
+  let isSignupMode = false;
 
   window.selectRole = (role) => {
     selectedRole = role;
-    document.getElementById('tab-client').classList.toggle('active', role==='client');
-    document.getElementById('tab-agent').classList.toggle('active', role==='agent');
+    document.getElementById('tab-client').classList.toggle('active', role === 'client');
+    document.getElementById('tab-agent').classList.toggle('active', role === 'agent');
   };
 
-  window.handleLogin = async () => {
-    const email = document.getElementById('email').value;
+  window.showSignup = () => {
+    isSignupMode = true;
+    document.getElementById('form-title').textContent = 'Créer un compte';
+    document.getElementById('form-subtitle').textContent = 'Remplissez les informations ci-dessous';
+    document.getElementById('name-field').style.display = 'block';
+    document.getElementById('btn-main').textContent = 'Créer mon compte';
+    document.getElementById('toggle-text').innerHTML =
+      'Déjà un compte ? <a href="#" onclick="showLogin();return false;" class="text-white font-medium">Se connecter</a>';
+    document.getElementById('error-msg').style.display = 'none';
+  };
+
+  window.showLogin = () => {
+    isSignupMode = false;
+    document.getElementById('form-title').textContent = 'Se connecter';
+    document.getElementById('form-subtitle').textContent = 'Choisissez votre profil pour continuer';
+    document.getElementById('name-field').style.display = 'none';
+    document.getElementById('btn-main').textContent = 'Connexion';
+    document.getElementById('toggle-text').innerHTML =
+      "Pas de compte ? <a href='#' onclick='showSignup();return false;' class='text-white font-medium'>S'inscrire</a>";
+    document.getElementById('error-msg').style.display = 'none';
+  };
+
+  const showErr = (msg) => {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg; el.style.display = 'block';
+  };
+  const setLoading = (on) => {
+    document.getElementById('loading').style.display = on ? 'block' : 'none';
+    document.getElementById('btn-main').disabled = on;
+  };
+
+  window.handleAction = () => isSignupMode ? handleSignup() : handleLogin();
+
+  async function handleLogin() {
+    const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    const errEl = document.getElementById('error-msg');
-    const loadEl = document.getElementById('loading');
-    errEl.style.display='none';
-    if(!email||!password){errEl.textContent='Veuillez remplir tous les champs';errEl.style.display='block';return;}
-    loadEl.style.display='block';
+    document.getElementById('error-msg').style.display = 'none';
+    if (!email || !password) { showErr('Veuillez remplir tous les champs'); return; }
+    setLoading(true);
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
-      const userDoc = await getDoc(doc(db,'users',cred.user.uid));
-      if(userDoc.exists()){
-        const role = userDoc.data().role;
-      <button class="btn-primary w-full py-3.5 rounded-xl font-semibold text-sm" onclick="handleLogin()">Connexion</button>
-      <div class="loading text-center text-white/55 text-xs mt-3" id="loading">Connexion en cours...</div>
-      <p class="text-center text-xs font-light text-white/55 mt-5">Pas de compte ? <a href="#" onclick="handleSignup();return false;" class="text-white font-medium">S'inscrire</a></p>
-    </div>
-  </div>
-</section>
-
-<!-- FEATURES -->
-<section id="features" class="max-w-6xl mx-auto px-6 pb-28">
-  <div class="grid md:grid-cols-3 gap-5">
-    <div class="liquid-glass rounded-2xl p-7">
-      <div class="w-11 h-11 rounded-xl flex items-center justify-center text-xl mb-5 liquid-glass">📍</div>
-      <h3 class="text-base font-semibold mb-2">Géolocalisation en temps réel</h3>
-      <p class="text-sm font-light text-white/60 leading-relaxed">Visualisez les parkings disponibles autour de vous sur une carte interactive.</p>
-    </div>
-    <div class="liquid-glass rounded-2xl p-7">
-      <div class="w-11 h-11 rounded-xl flex items-center justify-center text-xl mb-5 liquid-glass">⚡</div>
-      <h3 class="text-base font-semibold mb-2">Mise à jour instantanée</h3>
-      <p class="text-sm font-light text-white/60 leading-relaxed">Les agents mettent à jour les places libres en direct. Zéro délai, zéro surprise.</p>
-    </div>
-    <div class="liquid-glass rounded-2xl p-7">
-      <div class="w-11 h-11 rounded-xl flex items-center justify-center text-xl mb-5 liquid-glass">🔒</div>
-      <h3 class="text-base font-semibold mb-2">Réservation Premium</h3>
-      <p class="text-sm font-light text-white/60 leading-relaxed">Avec l'abonnement à 50 DH/mois, réservez votre place avant d'arriver.</p>
-    </div>
-  </div>
-</section>
-
-<!-- FOOTER -->
-<footer class="liquid-glass text-center py-5 text-sm font-light text-white/60 mx-6 mb-6 rounded-2xl">© 2025 ParkFinder MA — Trouvez votre place en un clic</footer>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyC3Qyp0HmSpINBHQoytD9rPhvuEn7RBNwY",
-    authDomain: "zr-business.firebaseapp.com",
-    projectId: "zr-business",
-    storageBucket: "zr-business.firebasestorage.app",
-    messagingSenderId: "744051534138",
-    appId: "1:744051534138:web:81d29df5a7aad994aa4803"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  let selectedRole = 'client';
-
-  window.selectRole = (role) => {
-    selectedRole = role;
-    document.getElementById('tab-client').classList.toggle('active', role==='client');
-    document.getElementById('tab-agent').classList.toggle('active', role==='agent');
-  };
-
-  window.handleLogin = async () => {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const errEl = document.getElementById('error-msg');
-    const loadEl = document.getElementById('loading');
-    errEl.style.display='none';
-    if(!email||!password){errEl.textContent='Veuillez remplir tous les champs';errEl.style.display='block';return;}
-    loadEl.style.display='block';
-    try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      const userDoc = await getDoc(doc(db,'users',cred.user.uid));
-      if(userDoc.exists()){
-        const role = userDoc.data().role;
-        window.location.href = role==='agent' ? 'agent.html' : 'client.html';
-      } else {
-        window.location.href = selectedRole==='agent' ? 'agent.html' : 'client.html';
-      }
-    } catch(e) {
-      loadEl.style.display='none';
-      errEl.textContent = e.code==='auth/user-not-found'?'Compte introuvable':e.code==='auth/wrong-password'?'Mot de passe incorrect':'Erreur: '+e.message;
-      errEl.style.display='block';
+      const userDoc = await getDoc(doc(db, 'users', cred.user.uid));
+      const role = userDoc.exists() ? userDoc.data().role : selectedRole;
+      window.location.href = role === 'agent' ? 'agent.html' : 'client.html';
+    } catch (e) {
+      setLoading(false);
+      const msgs = {
+        'auth/user-not-found': 'Aucun compte avec cet email.',
+        'auth/wrong-password': 'Mot de passe incorrect.',
+        'auth/invalid-credential': 'Email ou mot de passe incorrect.',
+        'auth/invalid-email': 'Email invalide.',
+        'auth/too-many-requests': 'Trop de tentatives, réessayez plus tard.'
+      };
+      showErr(msgs[e.code] || 'Erreur: ' + e.message);
     }
-  };
+  }
 
-  window.handleSignup = async () => {
-    const email = document.getElementById('email').value;
+  async function handleSignup() {
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    const errEl = document.getElementById('error-msg');
-    const loadEl = document.getElementById('loading');
-    errEl.style.display='none';
-    if(!email||!password){errEl.textContent='Veuillez remplir tous les champs';errEl.style.display='block';return;}
-    if(password.length<6){errEl.textContent='Mot de passe minimum 6 caractères';errEl.style.display='block';return;}
-    loadEl.style.display='block';
+    document.getElementById('error-msg').style.display = 'none';
+    if (!email || !password) { showErr('Veuillez remplir tous les champs'); return; }
+    if (password.length < 6) { showErr('Mot de passe minimum 6 caractères'); return; }
+    setLoading(true);
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(db,'users',cred.user.uid),{email,role:selectedRole,createdAt:new Date().toISOString(),premium:false});
-      window.location.href = selectedRole==='agent' ? 'agent.html' : 'client.html';
-    } catch(e) {
-      loadEl.style.display='none';
-      errEl.textContent = e.code==='auth/email-already-in-use'?'Email déjà utilisé':'Erreur: '+e.message;
-      errEl.style.display='block';
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        name: name || email.split('@')[0],
+        email, role: selectedRole,
+        createdAt: new Date().toISOString(), premium: false
+      });
+      window.location.href = selectedRole === 'agent' ? 'agent.html' : 'client.html';
+    } catch (e) {
+      setLoading(false);
+      const msgs = {
+        'auth/email-already-in-use': 'Cet email est déjà utilisé.',
+        'auth/invalid-email': 'Email invalide.',
+        'auth/weak-password': 'Mot de passe trop faible (min. 6 caractères).'
+      };
+      showErr(msgs[e.code] || 'Erreur: ' + e.message);
     }
-  };
+  }
 
-  // Enter key
-  document.addEventListener('keydown', e => { if(e.key==='Enter') window.handleLogin(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') window.handleAction(); });
 </script>
 </body>
 </html>
