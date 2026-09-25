@@ -37,10 +37,14 @@
   .badge-yellow { background: rgba(234,179,8,0.15); color: #facc15; }
   .parking-card { transition: .2s; cursor: pointer; }
   .parking-card:hover { background: rgba(255,255,255,0.06); }
-  #map { height: 100%; width: 100%; filter: grayscale(0.3) brightness(0.85); }
+  /* Tuiles OSM claires -> filtre CSS pour un rendu sombre, sans dépendre d'une clé API Carto */
+  #map { height: 100%; width: 100%; filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9) grayscale(0.15); }
   .leaflet-popup-content-wrapper { background: rgba(0,0,0,0.85); color: #fff; border-radius: 12px; backdrop-filter: blur(8px); }
   .leaflet-popup-tip { background: rgba(0,0,0,0.85); }
+  /* Les pins ne doivent pas être inversés par le filtre du fond */
+  .leaflet-marker-icon .map-pin { filter: invert(1) hue-rotate(180deg); }
   .map-pin { display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#000;background:#fff;border-radius:20px;padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.4); }
+  .leaflet-popup { filter: invert(1) hue-rotate(180deg); }
   .sidebar-scroll::-webkit-scrollbar { width: 5px; }
   .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
 </style>
@@ -139,7 +143,11 @@
 
   const leafMap = L.map('map', { zoomControl: false }).setView([33.9, -5.54], 13);
   L.control.zoom({ position: 'bottomright' }).addTo(leafMap);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap, © CARTO' }).addTo(leafMap);
+  // ✅ CORRIGÉ: tuiles OpenStreetMap standard (gratuites, sans clé API) au lieu de Carto (nécessite une clé désormais)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(leafMap);
 
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(pos => leafMap.setView([pos.coords.latitude, pos.coords.longitude], 14));
