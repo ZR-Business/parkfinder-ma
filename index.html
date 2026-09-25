@@ -141,13 +141,14 @@
   import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+  // ✅ CORRIGÉ: même projet Firebase que agent.html / reservation.html (zr-business)
   const firebaseConfig = {
-    apiKey: "AIzaSyDtzLPqmANNoSeJnMQXVuzX4v3wWD4yRF4",
-    authDomain: "parkfinder-ma.firebaseapp.com",
-    projectId: "parkfinder-ma",
-    storageBucket: "parkfinder-ma.firebasestorage.app",
-    messagingSenderId: "85462855932",
-    appId: "1:85462855932:web:46e034c25acb6481b36779"
+    apiKey: "AIzaSyC3Qyp0HmSpINBHQoytD9rPhvuEn7RBNwY",
+    authDomain: "zr-business.firebaseapp.com",
+    projectId: "zr-business",
+    storageBucket: "zr-business.firebasestorage.app",
+    messagingSenderId: "744051534138",
+    appId: "1:744051534138:web:81d29df5a7aad994aa4803"
   };
 
   const app = initializeApp(firebaseConfig);
